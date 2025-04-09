@@ -1,0 +1,215 @@
+#include <Servo.h>  
+#include <LiquidCrystal.h>
+
+Servo servo; // create servo object
+
+// constant variables for pins
+const int servoPin = 6;
+const int buttonPin = 9;
+const int ledPin = 7;
+const int buzzerPin = 8;
+
+// other variables
+int angle = 0;
+int angleIncrement = 45;  // 45 degrees for 4 compartments
+int newAngle;
+int buttonState;
+int movementDelay = 111;  // ~111ms delay gives us 45 degrees in 5 seconds (45 steps × 111ms ≈ 5000ms)
+int debounceDelay = 1500;
+
+// timing variables using millis()
+unsigned long previousMillis = 0;  // will store last time servo was rotated
+const long interval = 15000;       // interval at which to rotate (10 seconds)
+unsigned long rotationStartTime;   // when rotation started
+unsigned long lastSecondUpdate = 0; // for updating display without delay()
+int elapsedSeconds = 0;
+int elapsedMinutes = 0;
+int elapsedHours = 0;
+
+// LCD interface pins
+const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+
+void setup(){ // setup code that only runs once
+  pinMode(buttonPin, INPUT_PULLUP); // use internal pullup resistor for button
+  pinMode(ledPin, OUTPUT);          // set LED pin as output
+  pinMode(buzzerPin, OUTPUT);       // set buzzer pin as output
+  digitalWrite(ledPin, LOW);        // make sure LED is off
+  digitalWrite(buzzerPin, LOW);     // make sure buzzer is off
+  servo.attach(servoPin);           // attach servo object to servoPin
+  servo.write(angle);               // set servo to initial angle
+  Serial.begin(9600);               // initialize serial for debugging
+  
+  // Print debug info
+  Serial.println("Pill Dispenser Starting");
+  Serial.println("Will rotate every 10 seconds");
+
+  // set up the LCD's number of columns and rows:
+  lcd.begin(16, 2);
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Pill Dispenser");
+  lcd.setCursor(0, 1);
+  lcd.print("Starting...");
+  delay(2000);  // Show startup message
+  lcd.clear();
+  
+  // Initialize the timing variables
+  previousMillis = millis();
+  lastSecondUpdate = millis();
+}
+
+void loop(){  // code that loops forever
+  unsigned long currentMillis = millis();
+  
+  // Update the timer display every second without using delay()
+  if (currentMillis - lastSecondUpdate >= 1000) {
+    lastSecondUpdate = currentMillis;
+    elapsedSeconds++;
+    
+    if (elapsedSeconds >= 60) {
+      elapsedSeconds = 0;
+      elapsedMinutes++;
+      
+      if (elapsedMinutes >= 60) {
+        elapsedMinutes = 0;
+        elapsedHours++;
+      }
+    }
+    updateDisplay();
+    
+    // Debug print to serial monitor
+    Serial.print("Time elapsed: ");
+    Serial.print(elapsedHours);
+    Serial.print(":");
+    Serial.print(elapsedMinutes);
+    Serial.print(":");
+    Serial.print(elapsedSeconds);
+    Serial.print(" - Next rotation in: ");
+    Serial.print((interval - (currentMillis - previousMillis))/1000);
+    Serial.println(" seconds");
+  }
+  
+  // Check if it's time to rotate the servo (every 10 seconds)
+  if (currentMillis - previousMillis >= interval) {
+    Serial.println("AUTO ROTATION TRIGGERED");
+    previousMillis = currentMillis;  // Save the time
+    rotateServoSequence();           // Rotate the servo
+  }
+  
+  // Check for manual button press - only register when button is pressed
+  buttonState = digitalRead(buttonPin);
+  static int lastButtonState = LOW;
+  
+  if (buttonState == HIGH && lastButtonState == LOW) {
+    Serial.println("BUTTON PRESSED - MANUAL ROTATION");
+    delay(debounceDelay);  // Simple debouncing
+    rotateServoSequence();  // Manual rotation
+    previousMillis = currentMillis;  // Reset the timer
+  }
+  lastButtonState = buttonState;
+}
+
+// Function to handle the servo rotation sequence
+void rotateServoSequence() {
+  // Always rotate exactly 45 degrees from current position
+  newAngle = angle + angleIncrement; // increase angle by increment
+  
+  if (newAngle > 180) {  // if we would exceed 180 degrees
+    newAngle = 0;        // reset to 0
+    rotateServo(angle, newAngle); // rotate back to 0
+  } else {
+    rotateServo(angle, newAngle); // rotate forward by 45 degrees
+  }
+  
+  angle = newAngle;      // update current angle
+  
+  // flash LED and buzzer
+  flashLED(4, 150);      // flashLED(number of flashes, delay in milliseconds)
+}
+
+// Function to rotate servo with consistent timing
+void rotateServo(int startAngle, int endAngle) {
+  int steps;
+  int stepDirection;
+  
+  if (endAngle > startAngle) {
+    steps = endAngle - startAngle;
+    stepDirection = 1;
+  } else {
+    steps = startAngle - endAngle;
+    stepDirection = -1;
+  }
+  
+  int currentPosition = startAngle;
+  for (int i = 0; i < steps; i++) {
+    currentPosition += stepDirection;
+    servo.write(currentPosition);
+    Serial.println(currentPosition);
+    delay(movementDelay); // This delay gives us ~5 seconds for 45 degrees
+  }
+}
+
+void flashLED(int numFlashes, int flashDelay) {  // alarm function to flash LED and sound buzzer
+  lcd.clear();              // clear the LCD screen
+  lcd.setCursor(0, 0);      // set cursor to top left
+  lcd.print("Take medicine!");  // display message
+  lcd.setCursor(0, 1);
+  lcd.print("Press to confirm");
+  
+  for (int i = 0; i < numFlashes; i++) {  // loop to flash LED/buzzer numFlashes times
+    digitalWrite(ledPin, HIGH);         // turn LED on
+    digitalWrite(buzzerPin, HIGH);      // turn buzzer on
+    delay(flashDelay);                 // delay
+    digitalWrite(ledPin, LOW);          // turn LED off
+    digitalWrite(buzzerPin, LOW);       // turn buzzer off
+    delay(flashDelay);                 // delay
+  }
+  
+  // wait for button press - the code will get stuck in this loop until you press the button
+  // Note: button is now INPUT_PULLUP so logic is inverted (LOW when pressed)
+  Serial.println("Waiting for button press to acknowledge...");
+  while(digitalRead(buttonPin) != LOW) {
+    // Flash LED while waiting for button press
+    digitalWrite(ledPin, HIGH);
+    delay(100);
+    digitalWrite(ledPin, LOW);
+    delay(100);
+  }
+  
+  Serial.println("Button pressed, continuing...");
+  delay(debounceDelay);    // debounce delay
+  lcd.clear();    // clear screen
+}
+
+void updateDisplay() {
+  // Display elapsed time in HH:MM:SS format
+  lcd.setCursor(0, 0);
+  lcd.print("Timer: ");
+  
+  // Print hours with leading zero if needed
+  if (elapsedHours < 10) {
+    lcd.print("0");
+  }
+  lcd.print(elapsedHours);
+  lcd.print(":");
+  
+  // Print minutes with leading zero if needed
+  if (elapsedMinutes < 10) {
+    lcd.print("0");
+  }
+  lcd.print(elapsedMinutes);
+  lcd.print(":");
+  
+  // Print seconds with leading zero if needed
+  if (elapsedSeconds < 10) {
+    lcd.print("0");
+  }
+  lcd.print(elapsedSeconds);
+  
+  // Display current servo position
+  lcd.setCursor(0, 1);
+  lcd.print("Position: ");
+  lcd.print(angle);
+  lcd.print(" deg");
+}
