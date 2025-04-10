@@ -1,0 +1,112 @@
+[
+    {
+        "timestamp": "2025-04-01T15:21:08.119733",
+        "status": "motion_detected",
+        "gpio_state": 1
+    },
+    {
+        "timestamp": "2025-04-01T15:21:09.122527",
+        "status": "no_motion",
+        "gpio_state": 0
+    },
+    {
+        "timestamp": "2025-04-01T15:21:13.629157",
+        "status": "motion_detected",
+        "gpio_state": 1
+    },
+    {
+        "timestamp": "2025-04-01T15:21:15.132460",
+        "status": "no_motion",
+        "gpio_state": 0
+    },
+    {
+        "timestamp": "2025-04-01T15:21:21.641667",
+        "status": "motion_detected",
+        "gpio_state": 1
+    },
+    {
+        "timestamp": "2025-04-01T15:21:22.645418",
+        "status": "no_motion",
+        "gpio_state": 0
+    },
+    {
+        "timestamp": "2025-04-01T15:21:27.152640",
+        "status": "motion_detected",
+        "gpio_state": 1
+    },
+    {
+        "timestamp": "2025-04-01T15:21:28.156163",
+        "status": "no_motion",
+        "gpio_state": 0
+    },
+    {
+        "timestamp": "2025-04-01T15:21:35.666930",
+        "status": "motion_detected",
+        "gpio_state": 1
+    },
+    {
+        "timestamp": "2025-04-01T15:21:36.670781",
+        "status": "no_motion",
+        "gpio_state": 0
+    },
+    {
+        "timestamp": "2025-04-01T15:21:42.179946",
+        "status": "motion_detected",
+        "gpio_state": 1
+    },
+    {
+        "timestamp": "2025-04-01T15:21:43.183427",
+        "status": "no_motion",
+        "gpio_state": 0
+    },
+    {
+        "timestamp": "2025-04-01T15:21:48.692312",
+        "status": "motion_detected",
+        "gpio_state": 1
+    },
+    {
+        "timestamp": "2025-04-01T15:21:49.696321",
+        "status": "no_motion",
+        "gpio_state": 0
+    },
+    {
+        "timestamp": "2025-04-01T15:21:54.203174",
+        "status": "motion_detected",
+        "gpio_state": 1
+    },
+    {
+        "timestamp": "2025-04-01T15:21:55.207075",
+        "status": "no_motion",
+        "gpio_state": 0
+    },
+    {
+        "timestamp": "2025-04-01T15:22:00.215635",
+        "status": "motion_detected",
+        "gpio_state": 1
+    },
+    {
+        "timestamp": "2025-04-01T15:22:01.219733",
+        "status": "no_motion",
+        "gpio_state": 0
+    },
+    {
+        "timestamp": "2025-04-01T15:22:05.727775",
+        "status": "motion_detected",
+        "gpio_state": 1
+    },
+    {
+        "timestamp": "2025-04-01T15:22:06.731528",
+        "status": "no_motion",
+        "gpio_state": 0
+    },
+    {
+        "timestamp": "2025-04-01T15:22:12.240812",
+        "status": "motion_detected",
+        "gpio_state": 1
+    },
+    {
+        "timestamp": "2025-04-01T15:22:13.245552",
+        "status": "no_motion",
+        "gpio_state": 0
+    }
+]
