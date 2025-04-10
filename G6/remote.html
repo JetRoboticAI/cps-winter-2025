@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="http://fonts.googleapis.com/css?family=Roboto:400,700,300" rel="stylesheet" type="text/css" />
+  <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jquerymobile/1.4.3/jquery.mobile.min.css" />
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquerymobile/1.4.3/jquery.mobile.min.js"></script>
+  <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.4.21.6.min.js"></script>
+</head>
+<body>
+  <div data-role="page">
+    <div data-role="header">
+      <h1>2-Bit GPIO Control</h1>
+    </div>
+    <div data-role="content" style="width: 90%">
+      <h1 class="ui-bar ui-bar-a ui-corner-all">Control Panel</h1>
+      <div class="ui-body ui-body-a ui-corner-all">
+        <div class="ui-grid-a toggle" id="up">
+          <div>
+            <button type="button" class="ui-shadow ui-btn ui-corner-all ui-btn-inline" onclick="window.location.href='https://my-frontend-bucket-claire.s3.us-east-1.amazonaws.com/409-4.html'">Data Analysis</button>
+          </div>
+          <div class="ui-block-b">
+            <button type="button" class="ui-shadow ui-btn ui-corner-all ui-btn-inline" value="2">Up</button>
+          </div>
+        </div>
+        <div class="ui-grid-a toggle" id="down">
+          <div class="ui-block-b">
+            <button type="button" class="ui-shadow ui-btn ui-corner-all ui-btn-inline" value="1">Down</button>
+          </div>
+        </div>
+        <div class="ui-grid-a toggle" id="stop">
+          <div class="ui-block-b">
+            <button type="button" class="ui-shadow ui-btn ui-corner-all ui-btn-inline" value="0">Stop</button>
+          </div>
+        </div>
+        <div class="ui-grid-a toggle" id="auto">
+          <div class="ui-block-b">
+            <button type="button" class="ui-shadow ui-btn ui-corner-all ui-btn-inline" id="autoBtn">Start Auto</button>
+          </div>
+        </div>
+        <div class="ui-grid-a">
+          <div class="ui-block-a">
+            <label for="autoInterval">Auto Timer (seconds):</label>
+            <input type="number" id="autoInterval" value="5" min="1" max="60" class="ui-input-text ui-body-inherit ui-corner-all ui-shadow-inset">
+          </div>
+          <div class="ui-block-b">
+            <label for="motionInterval">Motion Duration (seconds):</label>
+            <input type="number" id="motionInterval" value="2" min="1" max="30" class="ui-input-text ui-body-inherit ui-corner-all ui-shadow-inset">
+          </div>
+        </div>
+      </div>
+      <h1 class="ui-bar ui-bar-a ui-corner-all">Status</h1>
+      <div id="status" class="ui-body ui-body-a ui-corner-all"></div>
+    </div>
+  </div>
+
+  <!-- Add confirmation dialog -->
+  <div data-role="dialog" id="confirmDialog" data-close-btn="none">
+    <div data-role="header">
+      <h1>Direction Change</h1>
+    </div>
+    <div data-role="main" class="ui-content">
+      <h2>Confirm upcoming move</h2>
+      <p id="confirmMessage"></p>
+    </div>
+    <div data-role="footer">
+      <div class="ui-grid-a">
+        <div class="ui-block-a">
+          <a href="#" class="ui-btn ui-corner-all ui-btn-inline" id="confirmYes">Confirm</a>
+        </div>
+        <div class="ui-block-b">
+          <a href="#" class="ui-btn ui-corner-all ui-btn-inline" id="confirmNo">Cancel</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add "Are you here?" dialog -->
+  <div data-role="dialog" id="areYouHereDialog" data-close-btn="none">
+    <div data-role="header">
+      <h1>Are you here?</h1>
+    </div>
+    <div data-role="main" class="ui-content">
+      <h2>No motion detected</h2>
+      <p>Auto mode will be deactivated in <span id="countdown">10</span> seconds if no response.</p>
+    </div>
+    <div data-role="footer">
+      <div class="ui-grid-a">
+        <div class="ui-block-b">
+          <a href="#" class="ui-btn ui-corner-all ui-btn-inline" id="cancelAuto">Cancel</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    $(function() {
+      var channel = "chenweisong728";
+      var pubnub = new PubNub({
+        publishKey: 'pub-c-85ba3694-4855-4861-a14b-fdfcb90cf839',
+        subscribeKey: 'sub-c-7c1de1d9-ea5b-451f-bb88-35ae502a81c4'
+      });
+
+      // Function to format timestamp
+      function formatTimestamp() {
+        var now = new Date();
+        return now.toLocaleTimeString() + ' ' + now.toLocaleDateString();
+      }
+
+      // Variables for "Are you here?" dialog
+      let inactivityTimer;
+      let countdownInterval;
+      let remainingSeconds = 10;
+
+      // Function to show "Are you here?" dialog
+      function showAreYouHereDialog() {
+        remainingSeconds = 10;
+        $('#countdown').text(remainingSeconds);
+        
+        // Show the dialog
+        $.mobile.changePage("#areYouHereDialog", { transition: "pop" });
+        
+        // Start countdown
+        countdownInterval = setInterval(function() {
+          remainingSeconds--;
+          $('#countdown').text(remainingSeconds);
+          
+          if (remainingSeconds <= 0) {
+            clearInterval(countdownInterval);
+            if (isAutoRunning) {
+              toggleAutoControl(); // This will stop auto mode
+            }
+            $('#areYouHereDialog').dialog('close');
+          }
+        }, 1000);
+      }
+
+      // Handle cancel button in "Are you here?" dialog
+      $('#cancelAuto').click(function() {
+        clearInterval(countdownInterval);
+        $('#areYouHereDialog').dialog('close');
+      });
+
+      // Publish button clicks
+      $('button').click(function() {
+        // Skip PubNub message for Data Analysis button
+        if ($(this).attr('onclick') !== undefined) {
+          return;
+        }
+        
+        var value = $(this).val();
+        var module = $(this).parent().parent().attr("id");
+        pubnub.publish({
+          channel: channel,
+          message: { "value": parseInt(value) }
+        });
+
+        // If it's an up or down command, set a timer to stop after motion interval
+        if (value === "1" || value === "2") {
+          const motionInterval = parseInt($('#motionInterval').val()) * 1000;
+          setTimeout(function() {
+            pubnub.publish({
+              channel: channel,
+              message: { "value": 0 }
+            });
+          }, motionInterval);
+        }
+      });
+
+      // Auto control variables
+      let autoInterval;
+      let isAutoRunning = false;
+      let currentDirection = 2; // 2 for up, 1 for down
+      let pendingDirectionChange = false;
+      let nextDirection = 2;
+      let remainingTime = 0; // Store remaining time when paused
+      let motionTimer; // Timer for motion interval
+
+      // Function to show confirmation dialog
+      function showConfirmationDialog(nextDir) {
+        pendingDirectionChange = true;
+        nextDirection = nextDir;
+        const message = nextDir === 2 ? "Moving Up" : "Moving Down";
+        $('#confirmMessage').text(message);
+        // Clear the current interval
+        clearInterval(autoInterval);
+        $.mobile.changePage("#confirmDialog", { transition: "pop" });
+      }
+
+      // Function to resume the timer
+      function resumeTimer() {
+        if (isAutoRunning) {
+          const autoIntervalMs = parseInt($('#autoInterval').val()) * 1000;
+          autoInterval = setInterval(function() {
+            if (!pendingDirectionChange) {
+              const nextDir = currentDirection === 2 ? 1 : 2;
+              showConfirmationDialog(nextDir);
+            }
+          }, autoIntervalMs);
+        }
+      }
+
+      // Handle confirmation dialog responses
+      $('#confirmYes').click(function() {
+        if (pendingDirectionChange) {
+          pubnub.publish({
+            channel: channel,
+            message: { "value": nextDirection }
+          });
+          currentDirection = nextDirection;
+          pendingDirectionChange = false;
+
+          // Set timer to stop after motion interval
+          clearTimeout(motionTimer);
+          const motionInterval = parseInt($('#motionInterval').val()) * 1000;
+          motionTimer = setTimeout(function() {
+            pubnub.publish({
+              channel: channel,
+              message: { "value": 0 }
+            });
+          }, motionInterval);
+        }
+        $.mobile.changePage("#main", { transition: "pop" });
+        // Auto dismiss after 1 second
+        setTimeout(function() {
+          $('#confirmDialog').dialog('close');
+          // Resume the timer after dialog is closed
+          resumeTimer();
+        }, 1000);
+      });
+
+      $('#confirmNo').click(function() {
+        pendingDirectionChange = false;
+        $.mobile.changePage("#main", { transition: "pop" });
+        // Auto dismiss after 1 second
+        setTimeout(function() {
+          $('#confirmDialog').dialog('close');
+          // Resume the timer after dialog is closed
+          resumeTimer();
+        }, 1000);
+      });
+
+      // Auto control function
+      function toggleAutoControl() {
+        if (!isAutoRunning) {
+          isAutoRunning = true;
+          $('#autoBtn').text('Stop Auto');
+
+          // Send Auto mode start message
+          pubnub.publish({
+            channel: channel,
+            message: { "status": "Auto mode start" }
+          });
+          
+          // Start the oscillation
+          autoInterval = setInterval(function() {
+            if (!pendingDirectionChange) {
+              const nextDir = currentDirection === 2 ? 1 : 2;
+              showConfirmationDialog(nextDir);
+            }
+          }, 5000);
+        } else {
+          isAutoRunning = false;
+          $('#autoBtn').text('Start Auto');
+          // Send Auto mode stop message
+          pubnub.publish({
+            channel: channel,
+            message: { "status": "Auto mode stop" }
+          });
+
+          clearInterval(autoInterval);
+          // Send stop command
+          pubnub.publish({
+            channel: channel,
+            message: { "value": 0 }
+          });
+        }
+      }
+
+      // Add click handler for auto button
+      $('#autoBtn').click(function() {
+        toggleAutoControl();
+      });
+
+      // Subscribe to feedback
+      pubnub.addListener({
+        message: function(event) {
+          var msg = event.message;
+          var statusText = "";
+
+          // Handle no_motion alert
+          if (msg.alert === "no_motion") {
+            const secondsInactive = Math.round(msg.seconds_inactive);
+            if (isAutoRunning) {
+              showAreYouHereDialog();
+            }
+            statusText = `No motion detected for ${secondsInactive} seconds`;
+          }
+          // Handle regular movement commands
+          else if (msg.value !== undefined) {
+            if (msg.value === 2) statusText = "Moving Up";
+            else if (msg.value === 1) statusText = "Moving Down";
+            else if (msg.value === 0) statusText = "Stopped";
+            else statusText = "Unknown command";
+          }
+          // Handle status messages
+          else if (msg.status) {
+            statusText = msg.status;
+          }
+
+          var timestamp = formatTimestamp();
+          var pElement = $('<p>').text(`[${timestamp}] ${statusText}`);
+          $('#status').prepend(pElement);
+        }
+      });
+
+      pubnub.subscribe({
+        channels: [channel]
+      });
+    });
+  </script>
+</body>
+</html>
