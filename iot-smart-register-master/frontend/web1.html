@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Home Control System</title>
+  <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.7.2.2.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <link rel="stylesheet" href="web1.css">
+</head>
+
+<body>
+  <div class="main-container">
+    <div class="header">
+      <h1>Smart Home Control System</h1>
+      <p>Environment Monitoring and Device Control</p>
+    </div>
+
+    <div class="navbar">
+      <button class="nav-button active" data-target="monitoring">Environment Monitoring</button>
+      <button class="nav-button" data-target="servo-control">Servo Motor Control</button>
+    </div>
+
+    <!-- Environment Monitoring Section -->
+    <div id="monitoring" class="section active">
+      <div id="connection-status" class="status disconnected">
+        Disconnected - Waiting for data...
+      </div>
+
+      <div class="cards">
+        <div class="card">
+          <h2>Temperature</h2>
+          <div id="temperature-value" class="value">--</div>
+          <div class="unit">°C</div>
+        </div>
+        <div class="card">
+          <h2>Humidity</h2>
+          <div id="humidity-value" class="value">--</div>
+          <div class="unit">%</div>
+        </div>
+        <div class="card">
+          <h2>Motion Detection</h2>
+          <div id="motion-value" class="value motion">No Motion</div>
+          <div id="last-detected" class="last-detected">Last detected: Never</div>
+        </div>
+        <div class="card">
+          <h2>Smoke Detection</h2>
+          <div id="smoke-value" class="value">Normal</div>
+          <div id="smoke-status" class="last-detected">No gas detected</div>
+        </div>
+      </div>
+
+      <div class="charts">
+        <div class="chart-container">
+          <canvas id="temperature-chart"></canvas>
+        </div>
+        <div class="chart-container">
+          <canvas id="humidity-chart"></canvas>
+        </div>
+      </div>
+
+      <div class="log">
+        <h2>Activity Log</h2>
+        <div id="log-container"></div>
+      </div>
+
+      <div id="debug-panel" class="debug-panel">
+        <h3>Debug Information</h3>
+        <div id="debug-container"></div>
+      </div>
+    </div>
+
+    <!-- Servo Motor Control Section - Modified for SG90 servo range (0-180°) -->
+    <div id="servo-control" class="section">
+      <div class="current-angle">
+        <h2>Current Angle: <span id="angle-display">90</span>°</h2>
+      </div>
+
+      <div class="servo-visual">
+        <div class="servo-base"></div>
+        <div class="servo-arm" id="servo-arm"></div>
+        <!-- Modified angle markers for SG90 range -->
+        <div class="angle-marker" style="transform: rotate(0deg);" data-angle="0°"></div>
+        <div class="angle-marker" style="transform: rotate(45deg);" data-angle="45°"></div>
+        <div class="angle-marker" style="transform: rotate(90deg);" data-angle="90°"></div>
+        <div class="angle-marker" style="transform: rotate(135deg);" data-angle="135°"></div>
+        <div class="angle-marker" style="transform: rotate(180deg);" data-angle="180°"></div>
+      </div>
+
+      <div class="control-panel">
+        <div class="preset-buttons">
+          <h3>Preset Positions</h3>
+          <button id="far-left" class="btn">Far Left (0°)</button>
+          <button id="left" class="btn">Left (45°)</button>
+          <button id="center" class="btn">Center (90°)</button>
+          <button id="right" class="btn">Right (135°)</button>
+          <button id="far-right" class="btn">Far Right (180°)</button>
+        </div>
+
+        <div class="angle-slider">
+          <h3>Precise Angle Control</h3>
+          <input type="range" id="angle-slider" min="0" max="180" value="90" step="1">
+          <div class="slider-labels">
+            <span>0°</span>
+            <span>45°</span>
+            <span>90°</span>
+            <span>135°</span>
+            <span>180°</span>
+          </div>
+          <div class="angle-input">
+            <input type="number" id="angle-input" min="0" max="180" value="90">
+            <button id="set-angle" class="btn">Set</button>
+          </div>
+        </div>
+
+        <!-- <div class="sweep-controls">
+          <h3>Sweep Control</h3>
+          <div class="sweep-range">
+            <label for="sweep-start">Start Angle:</label>
+            <input type="number" id="sweep-start" min="0" max="180" value="0">
+            <label for="sweep-end">End Angle:</label>
+            <input type="number" id="sweep-end" min="0" max="180" value="180">
+          </div>
+          <div class="sweep-params">
+            <label for="sweep-step">Step Value:</label>
+            <input type="number" id="sweep-step" min="1" max="45" value="10">
+            <label for="sweep-delay">Delay (sec):</label>
+            <input type="number" id="sweep-delay" min="0.01" max="1" value="0.1" step="0.01">
+          </div>
+          <button id="start-sweep" class="btn sweep-btn">Start Sweep</button>
+        </div> -->
+      </div>
+
+      <div class="status-panel">
+        <h3>Status Information</h3>
+        <div id="status-message">Ready</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="web1.js"></script>
+</body>
+
+</html>
