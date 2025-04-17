@@ -1,0 +1,399 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f5f5f5;
+  color: #333;
+  line-height: 1.6;
+}
+
+.main-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Navigation Styles */
+.navbar {
+  background-color: #2c3e50;
+  padding: 15px 0;
+  margin-bottom: 20px;
+  border-radius: 5px;
+  display: flex;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.nav-button {
+  background-color: transparent;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  margin: 0 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.3s;
+}
+
+.nav-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-button.active {
+  background-color: #3498db;
+}
+
+.section {
+  display: none;
+}
+
+.section.active {
+  display: block;
+}
+
+/* Header styles */
+.header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.header h1 {
+  color: #2c3e50;
+  margin-bottom: 5px;
+}
+
+.header p {
+  color: #7f8c8d;
+  margin-top: 0;
+}
+
+/* Environment Monitoring Dashboard styles */
+.status {
+  padding: 10px;
+  background-color: #ecf0f1;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.status.connected {
+  background-color: #d5f5e3;
+  color: #27ae60;
+}
+
+.status.disconnected {
+  background-color: #f5d5d5;
+  color: #c0392b;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.card {
+  background-color: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.card h2 {
+  margin-top: 0;
+  color: #2c3e50;
+  font-size: 1.2rem;
+}
+
+.card .value {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin: 10px 0;
+  color: #3498db;
+}
+
+.card .unit {
+  font-size: 1rem;
+  color: #7f8c8d;
+}
+
+.motion {
+  color: #2c3e50;
+}
+
+.motion.detected {
+  color: #e74c3c;
+}
+
+.charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.chart-container {
+  background-color: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+  .charts {
+    grid-template-columns: 1fr;
+  }
+}
+
+.log {
+  background-color: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.log-entry {
+  margin-bottom: 5px;
+  padding: 5px;
+  border-bottom: 1px solid #ecf0f1;
+}
+
+.timestamp {
+  color: #7f8c8d;
+  font-size: 0.8rem;
+}
+
+.last-detected {
+  font-size: 0.9rem;
+  color: #7f8c8d;
+  margin-top: 5px;
+}
+
+.debug-panel {
+  margin-top: 20px;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 5px;
+  padding: 10px;
+  display: none;
+}
+
+.debug-panel h3 {
+  margin-top: 0;
+  color: #2c3e50;
+  font-size: 1rem;
+}
+
+.debug-entry {
+  font-family: monospace;
+  font-size: 0.8rem;
+  margin-bottom: 3px;
+}
+
+/* Servo Control styles */
+.current-angle {
+  text-align: center;
+  background-color: #fff;
+  padding: 15px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+#angle-display {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: #3498db;
+}
+
+.control-panel {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.preset-buttons,
+.angle-slider,
+.sweep-controls {
+  margin-bottom: 25px;
+  padding-bottom: 25px;
+  border-bottom: 1px solid #eee;
+}
+
+.btn {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  margin: 5px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.btn:hover {
+  background-color: #2980b9;
+}
+
+.sweep-btn {
+  background-color: #e74c3c;
+  margin-top: 10px;
+}
+
+.sweep-btn:hover {
+  background-color: #c0392b;
+}
+
+.angle-slider input[type="range"] {
+  width: 100%;
+  margin: 10px 0;
+}
+
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
+.angle-input {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 15px;
+}
+
+.angle-input input {
+  width: 80px;
+  margin-right: 10px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.sweep-range,
+.sweep-params {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
+.sweep-range input,
+.sweep-params input {
+  width: 80px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.status-panel {
+  background-color: #fff;
+  padding: 15px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+#status-message {
+  padding: 10px;
+  background-color: #eee;
+  border-radius: 4px;
+  min-height: 40px;
+}
+
+.servo-visual {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  margin: 0 auto 20px;
+  background-color: #fff;
+  border-radius: 50%;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.servo-base {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 40px;
+  height: 40px;
+  margin-left: -20px;
+  margin-top: -20px;
+  background-color: #3498db;
+  border-radius: 50%;
+  z-index: 2;
+}
+
+.servo-arm {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 120px;
+  height: 8px;
+  margin-left: -10px;
+  margin-top: -4px;
+  background-color: #e74c3c;
+  transform-origin: 10px 4px;
+  transform: rotate(90deg);
+  z-index: 1;
+  transition: transform 0.3s;
+}
+
+.angle-marker {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 140px;
+  height: 1px;
+  background-color: #ddd;
+  transform-origin: left;
+  z-index: 0;
+}
+
+.angle-marker:before {
+  content: attr(data-angle);
+  position: absolute;
+  right: -25px;
+  top: -10px;
+  font-size: 12px;
+  color: #777;
+}
+
+@media (max-width: 600px) {
+
+  .sweep-range,
+  .sweep-params {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .sweep-range label,
+  .sweep-params label {
+    margin-bottom: 5px;
+  }
+
+  .sweep-range input,
+  .sweep-params input {
+    margin-bottom: 10px;
+    width: 100%;
+  }
+
+  .servo-visual {
+    width: 250px;
+    height: 250px;
+  }
+}
